@@ -81,4 +81,4 @@ See [`GDD.md`](GDD.md) for the full game design document.
 
 ## ⚖️ License
 
-No open-source license specified; all rights reserved.
+[MIT](LICENSE) © skywalkerqqq

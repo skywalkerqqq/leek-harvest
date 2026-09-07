@@ -81,4 +81,4 @@ leek-harvest/
 
 ## ⚖️ License
 
-未指定开源许可证，保留所有权利。
+[MIT](LICENSE) © skywalkerqqq
