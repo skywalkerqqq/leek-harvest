@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>镰刀与韭菜 · 暗黑绿调切片</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0a120d;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: #cfe8d8; -webkit-user-select: none; user-select: none; }
+  #scene { position: fixed; inset: 0; display: block; touch-action: none; }
+  #ui { position: fixed; inset: 0; pointer-events: none; }
+  #ui .panel, #ui .toolbar, #ui .help, #ui .btn { pointer-events: auto; }
+
+  .topbar { position: absolute; top: 14px; left: 14px; background: rgba(10,18,13,0.8);
+    border: 1px solid rgba(120,200,150,0.22); border-radius: 10px; padding: 12px 16px; min-width: 210px;
+    backdrop-filter: blur(4px); }
+  .cash { font-size: 26px; font-weight: 600; color: #e9c45a; letter-spacing: 0.5px; }
+  .sub { font-size: 12px; color: #7fae8e; margin-top: 3px; display: flex; gap: 16px; align-items: center; }
+  .heatwrap { margin-top: 9px; height: 8px; background: rgba(255,255,255,0.08); border-radius: 6px; overflow: hidden; }
+  .heatbar { height: 100%; width: 0%; background: linear-gradient(90deg, #e2b33a, #e2553a); transition: width .2s; }
+  .heatnum { font-variant-numeric: tabular-nums; }
+
+  .upgrade { position: absolute; top: 14px; right: 14px; width: 268px; background: rgba(10,18,13,0.82);
+    border: 1px solid rgba(120,200,150,0.22); border-radius: 10px; padding: 14px; display: none; backdrop-filter: blur(4px); }
+  .upgrade h3 { margin: 0 0 10px; font-size: 14px; color: #b9e3c8; font-weight: 500; }
+  .uitem { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0;
+    border-top: 1px solid rgba(255,255,255,0.06); }
+  .uitem .nm { font-size: 13px; }
+  .uitem .lv { color: #6f9b80; font-size: 11px; }
+  .uitem .ds { font-size: 11px; color: #7fae8e; margin-top: 2px; }
+  .uitem button { background: #16241a; border: 1px solid rgba(120,200,150,0.3); color: #cfe8d8;
+    border-radius: 8px; padding: 6px 11px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .uitem button:disabled { opacity: .38; cursor: default; }
+
+  .toolbar { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; }
+  .btn { background: rgba(14,24,18,0.85); border: 1px solid rgba(120,200,150,0.25); color: #cfe8d8;
+    padding: 9px 15px; border-radius: 10px; font-size: 14px; cursor: pointer; transition: .15s; text-align: center; }
+  .btn:hover { border-color: rgba(150,230,180,0.6); background: rgba(20,36,26,0.9); }
+  .btn.active { background: #1d3a28; border-color: #e9c45a; color: #fff; }
+  .btn .k { display: block; font-size: 11px; color: #7fae8e; margin-top: 2px; }
+  .btn.active .k { color: #e9c45a; }
+
+  .help { position: absolute; bottom: 76px; left: 50%; transform: translateX(-50%); font-size: 12px;
+    color: #6f9b80; background: rgba(10,18,13,0.6); padding: 6px 12px; border-radius: 8px; }
+
+  .toast { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); display: flex;
+    flex-direction: column; gap: 8px; align-items: center; }
+  .toast .t { background: rgba(14,24,18,0.92); border: 1px solid rgba(120,200,150,0.3); border-radius: 8px;
+    padding: 8px 14px; font-size: 13px; animation: tin .3s ease; }
+  .toast .t.danger { border-color: #e2553a; color: #ffb3a3; }
+  .toast .t.good { border-color: #7fce9b; color: #bff0cf; }
+  @keyframes tin { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; } }
+
+  .float { position: absolute; transform: translate(-50%,-50%); color: #ffd866; font-weight: 600; font-size: 15px;
+    text-shadow: 0 1px 3px #000; pointer-events: none; animation: floatUp 1.1s ease forwards; }
+  @keyframes floatUp { from { opacity: 1; } to { opacity: 0; transform: translate(-50%,-150%); } }
+
+  #gameover { position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+    background: rgba(5,10,7,0.85); backdrop-filter: blur(4px); z-index: 30; }
+  .settle { background: rgba(10,18,13,0.96); border: 1px solid rgba(120,200,150,0.28); border-radius: 16px;
+    padding: 32px 38px; text-align: center; max-width: 92vw; box-shadow: 0 24px 70px rgba(0,0,0,0.55); }
+  .settle h2 { margin: 0 0 4px; font-size: 18px; color: #e9c45a; font-weight: 600; }
+  .settle .reason { font-size: 13px; color: #7fae8e; margin-bottom: 18px; }
+  .settle .rank { font-size: 32px; font-weight: 700; color: #fff; letter-spacing: 1px; }
+  .settle .cash { font-size: 18px; color: #e9c45a; margin: 10px 0 4px; }
+  .settle .stats { font-size: 12px; color: #7fae8e; margin-bottom: 22px; }
+  .settle .goBtns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .settle .goBtns button { background: #16241a; border: 1px solid rgba(120,200,150,0.35); color: #cfe8d8;
+    padding: 11px 22px; border-radius: 10px; font-size: 14px; cursor: pointer; }
+  .settle .goBtns button:hover { border-color: #e9c45a; color: #fff; }
+  .mini { margin-left: auto; background: transparent; border: 1px solid rgba(120,200,150,0.3); color: #7fae8e;
+    font-size: 11px; padding: 2px 9px; border-radius: 6px; cursor: pointer; }
+  .mini:hover { color: #fff; border-color: #e9c45a; }
+  @media (max-width: 640px) {
+    .toolbar { gap: 6px; bottom: 12px; }
+    .btn { padding: 10px 12px; font-size: 13px; min-width: 50px; }
+    .topbar { padding: 10px 12px; min-width: 170px; }
+    .cash { font-size: 20px; }
+    .upgrade { width: 240px; }
+    .help { display: none; }
+  }
+
+  #overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+    background: #0a120d; color: #cfe8d8; font-size: 15px; text-align: center; padding: 30px; line-height: 1.7; }
+</style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div id="ui">
+    <div class="topbar panel">
+      <div class="cash" id="cash">¥10,000</div>
+      <div class="sub"><span id="day">第 1 天</span><span id="rep">口碑 100</span><button id="resetBtn" class="mini">重开</button></div>
+      <div class="heatwrap"><div class="heatbar" id="heatbar"></div></div>
+      <div class="sub"><span>监管热度</span><span id="heatnum">0%</span></div>
+    </div>
+
+    <div class="upgrade panel" id="upgradePanel">
+      <h3>镰刀工坊</h3>
+      <div id="upgradeList"></div>
+    </div>
+
+    <div class="toolbar" id="toolbar"></div>
+    <div class="help" id="help">拖拽/双指旋转缩放 · 选「收割」点田挥镰 · 目标：30 天内成为镰刀之王</div>
+    <div class="toast" id="toast"></div>
+    <div id="floatLayer" style="position:absolute;inset:0;pointer-events:none"></div>
+  </div>
+
+  <div id="gameover">
+    <div class="settle">
+      <h2>本轮结算</h2>
+      <div class="reason" id="goReason"></div>
+      <div class="rank" id="goRank"></div>
+      <div class="cash" id="goCash"></div>
+      <div class="stats" id="goStats"></div>
+      <div class="goBtns">
+        <button id="goAgain">再来一局</button>
+        <button id="goSandbox">继续沙盒</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="overlay">你的浏览器不支持 WebGL，无法运行本游戏。<br/>请使用最新版 Chrome / Edge / Firefox，并确保已开启硬件加速。</div>
+
+  <script type="importmap">
+  { "imports": { "three": "./vendor/three/build/three.module.js" } }
+  </script>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
